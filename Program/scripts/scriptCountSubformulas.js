@@ -1,6 +1,3 @@
-/*
-@author: Весь код данной лабораторной работы полностью разработан студентом группы 521701 Дубовским В.В.
-*/
 "use strict"                
 
 var unaryOrBinaryComplexFormula = new RegExp('([(][!]([A-Z]|[0-1])[)])|([(]([A-Z]|[0-1])((&)|(\\|)|(->)|(~))([A-Z]|[0-1])[)])', 'g');
@@ -12,8 +9,8 @@ var result;
 function countSubformulas() 
 {
   var inputFormula = document.getElementById("inputFormula").value; 
-  if (verificateFormula(inputFormula)) alert("Количество подформул: " + searchSubformuls(inputFormula));
-  else alert("Данное выражение не является формулой");
+  if (verificateFormula(inputFormula)) alert("Количество подформул: " + searchSubformulas(inputFormula));
+  else alert("Данное выражение не является формулой!");
 }
 
 function verificateFormula(formula)
@@ -29,7 +26,7 @@ function verificateFormula(formula)
   else return false;
 }
 
-function searchSubformuls(formula) 
+function searchSubformulas(formula) 
 {
   result = formula.match(atomOrConstant, 'g');
   while (formula !== temp) 
@@ -45,7 +42,7 @@ function searchSubformuls(formula)
       for (var j = i + 1; j < result.length; )
       {
         if (result[i] == result[j]) result.splice(j, 1);
-        else j++
+        else j++;
       }  
     }
     return result.length-1;

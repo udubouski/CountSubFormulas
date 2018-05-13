@@ -1,346 +1,191 @@
-/*
-@author: Весь код данной лабораторной работы полностью разработан студентом группы 521701 Дубовским В.В.
-*/
-"use strict"
+var values=[];
+var set=[];
 
-function checkFormula() {
-	var firstFormula = document.getElementById("firstFormula").value; 
-		var secondFormula = document.getElementById("secondFormula").value; 
-    if (firstFormula != "" && secondFormula != "" && verificateFormula(firstFormula) && verificateFormula(secondFormula)) {
-      // заменяет минусы в импликациях
-        firstFormula = changeImplication(firstFormula); //из второго инпута
-        secondFormula = changeImplication(secondFormula);// из первого инпута
-        // создает массив символов(констант) из первой формулы
-        var FirstSymbolsArray = new Array();
-        // считает количество констант
-        var numberOfSymbolsFirst = countSymbols(firstFormula, FirstSymbolsArray);
+function checkFormula() 
+{
+    var vir1=document.getElementById('firstFormula').value;
+    var vir2=document.getElementById('secondFormula').value;
+    var all_vir=("("+vir1+")"+"-"+"("+vir2+")");
+    if (verificateFormula(vir1) && verificateFormula(vir2)) initCalculation(all_vir);
+    else alert("Данное выражение не является формулой!");
+}
 
-        var SecondSymbolsArray = new Array();
-        var numberOfSymbolsSecond = countSymbols(secondFormula, SecondSymbolsArray);
-        //
-        checkSymbolsOfArrays(FirstSymbolsArray, SecondSymbolsArray);
-
-        var answer;
- 
-        var firstFormulaMatrix = buildMatrix(firstFormula, FirstSymbolsArray, FirstSymbolsArray.length);
-        var secondFormulaMatrix = buildMatrix(secondFormula, SecondSymbolsArray, SecondSymbolsArray.length);
-
-        var followTest = followCheck(firstFormulaMatrix, secondFormulaMatrix);
-
-        if (followTest == true) {
-        	answer = "Формула 1:" + secondFormula + " следует из формулы 2:" + firstFormula;
-        	alert(answer);
-        	
-        } else if (followTest == false) {
-        	answer = "Формула 1:" + secondFormula + " не следует из формулы 2:" + firstFormula;
-        	alert(answer);
-        
+function initCalculation(s)
+{
+    createVariablesSet(s);
+    var tr=true;
+    for(koll=0;koll<Math.pow(2,set.length);koll++) 
+	{
+        values=[];
+        for(i=0;i<set.length;i++)
+		{            
+			values.push('0');
+		}
+        var val = (koll).toString(2).split("");
+        for (i = 0; i < val.length; i++)
+		{
+            values.push(val[i]);
+            values.shift();
         }
-
-    } else {
-        alert("Неправильно введены формулы")
-    }
-}
-var unaryOrBinaryComplexFormula = new RegExp('([(][!]([A-Z]|[0-1])[)])|([(]([A-Z]|[0-1])((&)|(\\|)|(->)|(~))([A-Z]|[0-1])[)])', 'g');
-var atomOrConstant = new RegExp('([A-Z]|[0-1])', 'g');
-var replaceFormula = "R";
-var result;
-var tempFormula;
-
-function verificateFormula(formula){
-
-      while (formula != tempFormula ) {
-        tempFormula = formula;
-        formula = formula.replace(unaryOrBinaryComplexFormula, replaceFormula);
-      }
-      tempFormula=0;
-    var resultType = formula.match(new RegExp(atomOrConstant, 'g'));
-    if ((formula.length == 1) && (resultType != null) && (resultType.length == 1)) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-function checkSymbolsOfArrays(FirstSymbolsArray, SecondSymbolsArray) {
-    for (var i = 0; i < FirstSymbolsArray.length; i++) {
-        if (checkSymbolsInArr(FirstSymbolsArray[i], SecondSymbolsArray) == false) {
-            SecondSymbolsArray[SecondSymbolsArray.length] = FirstSymbolsArray[i];
+        if(calculate(replase_impl(initVariablesInExpression(s)))==0) 
+		{
+            tr = false;
+            break;
         }
     }
-    for (var i = 0; i < SecondSymbolsArray.length; i++) {
-        if (checkSymbolsInArr(SecondSymbolsArray[i], FirstSymbolsArray) == false) {
-            FirstSymbolsArray[FirstSymbolsArray.length] = SecondSymbolsArray[i];
+    alert(tr);
+}
+
+function createVariablesSet(str) 
+{
+    for(i=0;i<str.length;i++)
+	{
+        if(isVariable(str[i])) addInSet(str[i]);
+    }
+}
+
+function initVariablesInExpression(str)
+{
+    var newStr=str.split("");
+    for(i=0;i<str.length;i++)
+	{
+		for(j=0;j<set.length;j++)
+		{
+			if(str[i]==set[j]) newStr[i]=(values[j]);
+		}
+    }
+    return newStr.join("");
+}
+
+function isDelim(c) 
+{
+    return c == ' ';
+}
+
+function isOperator(c) 
+{
+    return c == '~' || c == '-' || c == '|' || c == '&' || c == '!';
+}
+
+function processOperator(st, op) 
+{
+    var r = st.pop();
+    if (op != '!') var l = st.pop();
+    switch (op) 
+	{
+        case '~':
+            if(r==l) st.push('1');
+            else st.push('0');
+            break;
+        case '-':
+            if(r==l|r=='1') st.push('1'); 
+            else st.push('0');
+            break;
+        case '|':
+            if(l=='1'||r=='1') st.push('1');
+            else st.push('0');
+            break;
+        case '&':
+            if(l==r&&l=='1') st.push('1');
+            else st.push('0');
+            break;
+        case '!':
+            if(r=='1') st.push('0');
+            else st.push('1');
+            break;
+    }
+}
+
+function addInSet(el)
+{
+    var bool=true;
+    for(var i=0; i<set.length;i++)
+	{
+        if(set[i]==el) 
+		{
+            bool = false;
+            break;
         }
     }
-    for (var i = 0; i < FirstSymbolsArray.length; i++) {
-        SecondSymbolsArray[i] = FirstSymbolsArray[i];
+    if(bool) set.push(el);
+}
+
+function isLetter(s) 
+{
+    if (s == '1' || s == '0') return true;
+    else return false;
+}
+
+function isVariable(s) 
+{
+    if (s >= 'A' && s <= 'Z') return true;
+    else return false;
+}
+
+function priority(op) 
+{
+    switch (op) 
+	{
+        case '~':
+            return 1;
+        case '-':
+            return 2;
+        case '|':
+            return 3;
+        case '&':
+            return 4;
+        case '!':
+            return 5;
+        default:
+            return -1;
     }
 }
 
-function checkSymbolsInArr(symbol, masForCheck) {
-    for (var i = 0; i < masForCheck.length; i++) {
-        if (masForCheck[i] == symbol) {
-            return true;
+function replase_impl(str)
+{
+    var regexp = /->/g;
+    var ab = str.replace(regexp,"-");
+    if(ab!=null||ab!=undefined) return ab;
+    else return str;
+}
+
+function calculate(s)
+{
+    var st = [];
+    var op = [];
+    for (i = 0; i < s.length; i++) 
+	{
+        var c = s.charAt(i);
+        if (isDelim(c)) continue;
+        if (c == '(') op.push('(');
+        else if (c == ')') 
+		{
+            while (op[op.length - 1] != '(')
+                processOperator(st, op.pop());
+            op.pop();
+        } 
+		else if (isOperator(c)) 
+		{
+            while (op.length != 0 && priority(op[op.length - 1]) >= priority(c))
+                processOperator(st, op.pop());
+            op.push(c);
+        } 
+		else 
+		{
+            var operand = "";
+            while (i < s.length && (isLetter(s.charAt(i))))
+                operand += s.charAt(i++);
+            --i;
+            st.push(operand);
         }
     }
-    return false;
+    while (op.length != 0)
+        processOperator(st, op.pop());
+    return st[0];
 }
 
-function changeImplication(formula) {
-    var temp = formula;
-    for (var i = 0; i < temp.length; i++) {
-        var char = temp.substring(i, i + 1);
-        if (char == "-") {
-            temp = temp.substring(0, i) + temp.substring(i + 1, temp.length);
-        }
-    }
-    return temp;
-}
 
-function buildMatrix(formula, masOfSymbols, numberOfSymbols) {
-  // считаем количество скобок(операций)
-    var numberOfBrackets = countBrackets(formula);
-    var column = numberOfSymbols + +numberOfBrackets;
-    var line = Math.pow(2, numberOfSymbols);
-    var mas = new Array(line);
-    for (var i = 0; i < line; i++) {
-        for (var j = 0; j < column; j++) {
-            mas[i] = new Array(column);
-        }
-    }
-    searchOperation(formula, masOfSymbols);
-    fillMatrix(mas, masOfSymbols, numberOfSymbols);
-    return mas;
-}
 
-function fillMatrix(mas, masOfSymbols, numberOfSymbol) {
-    for (var i = 0; i < mas.length; i++) {
-        var tempMas = toBinaryNumber(i.toString(2), numberOfSymbol);
-        for (var j = 0; j < mas[i].length; j++) {
-            if (j < numberOfSymbol) {
-                mas[i][j] = tempMas[j];
-            } else {
-                mas[i][j] = doOperations(mas, i, masOfSymbols, masOfSymbols[j]);
-            }
-        }
-    }
-}
 
-function doOperations(mas, line, masOfFormulas, formula) {
-    var temp = formula.substring(1, formula.length - 1);
-    for (var i = 0; i < temp.length; i++) {
-        var char = temp.substring(i, i + 1);
-        var char2 = temp.substring(i + 2, i + 3);
-        var temp2 = +0;
-// проверка на наличие операции
-// проверить не только элемент который сейчас
-        if (char == "(") {
-           do {
-               i++;
-               char = temp.substring(i, i + 1);
-               if( /[& | \| | \- | ~ | !]/.test(char) == true) {
-                   temp2 ++;
-               }
-               if(char == ")") {
-                   temp2 --;
-               }
 
-            } while (char != ")" && +temp2 != +0);
-        }
-        if (char == "&" && char2 != ")") {
-            return AND(temp, i, masOfFormulas, line, mas);
-        } else if (char == "|" && char2 != ")") {
-            return OR(temp, i, masOfFormulas, line, mas);
-        } else if (char == ">" && char2 != ")") {
-            return IMPLICATION(temp, i, masOfFormulas, line, mas);
-        } else if (char == "~" && char2 != ")") {
-            return EQUIVALENCE(temp, i, masOfFormulas, line, mas);
-        } else if (char == "!") {
-            return NOT(temp, i, masOfFormulas, line, mas);
-        }
-    }
-}
 
-function toBinaryNumber(number, numberOfSymbols) {
-    var mas = new Array(numberOfSymbols);
-    for (var i = 0; i < numberOfSymbols - number.length; i++) {
-        mas[i] = 0;
-    }
-    var j = 0;
-    for (var i = numberOfSymbols - number.length; i < numberOfSymbols; i++) {
-        mas[i] = parseInt(number[j]);
-        j++;
-    }
-    return mas;
-}
-
-function searchOperation(formula, masOfSymbols) {
-    var masOfOpenedBrackets = new Array();
-    var masOfClosedBrackets = new Array();
-    var positionOfClosedBracket = 0;
-    var positionOfOpenedBracket = 0;
-    for (var i = 0; i < formula.length; i++) {
-        var char = formula.substring(i, i + 1);
-        if (char == ")") {
-          // проверяем была ли эта скобка или нет
-            if (checkBrackets(masOfClosedBrackets, i) == false) {
-                masOfClosedBrackets[masOfClosedBrackets.length] = i;
-                positionOfClosedBracket = i;
-                var bool = false;
-                for (var j = positionOfClosedBracket; j != -1; j--) {
-                    var char = formula.substring(i, i + 1);
-                    if (char == "(") {
-                        if (bool == false) {
-                            if (checkBrackets(masOfOpenedBrackets, i) == false) {
-                                masOfOpenedBrackets[masOfOpenedBrackets.length] = i;
-                                positionOfOpenedBracket = i;
-                                bool = true;
-                                var subFormula = formula.substring(positionOfOpenedBracket, positionOfClosedBracket + 1);
-                                // находим подформулу (символ или выражение)
-                                if (checkSymbol(masOfSymbols, subFormula) == false) {
-                                  //массив подформул
-                                    masOfSymbols[masOfSymbols.length] = subFormula;
-                                }
-                            }
-                        }
-                        i--;
-                    } else {
-                        i--;
-                    }
-                }
-            }
-        }
-    }
-}
-
-//!*
-function countSymbols(formula, mas) {
-    var result = 0;
-    for (var i = 0; i < formula.toString().length; i++) {
-        var checkSymbols = false;
-        var char = formula.substring(i, i + 1);
-        if (/[A-Z]/.test(char) == true) {
-            for (var j = 0; j < mas.length + 1; j++) {
-                if (mas[j] == char) {
-                    checkSymbols = true;
-                }
-            }
-            if (checkSymbols == false) {
-                mas[mas.length] = char;
-                result++;
-            }
-        }
-    }
-    return result;
-}
-
-function countBrackets(formula) {
-    var result = 0;
-    for (var i = 0; i < formula.toString().length; i++) {
-        var char = formula.substring(i, i + 1);
-        if (char == "(") {
-            result++;
-        }
-    }
-    return result;
-}
-function checkSymbol(mas, symbol) {
-    for (var i = 0; i < mas.length; i++) {
-        if (mas[i].toString() == symbol.toString()) {
-            return true;
-        }
-    }
-    return false;
-}
-function checkBrackets(mas, position) {
-    for (var i = 0; i < mas.length; i++) {
-        if (mas[i] == position) {
-            return true;
-        }
-    }
-    return false;
-}
-function findFormula(mas, formula) {
-    for (var i = 0; i < mas.length; i++) {
-        if (mas[i].toString() == formula.toString()) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-function AND(temp, position, masOfFormulas, line, mas) {
-    var subFormulaLeft = temp.substring(0, position);
-    var subFormulaRight = temp.substring(position + 1, temp.length);
-    var position1 = findFormula(masOfFormulas, subFormulaLeft);
-    var position2 = findFormula(masOfFormulas, subFormulaRight);
-    return mas[line][position1] & mas[line][position2];
-}
-
-function OR(temp, position, masOfFormulas, line, mas) {
-    var subFormulaLeft = temp.substring(0, position);
-    var subFormulaRight = temp.substring(position + 1, temp.length);
-    var position1 = findFormula(masOfFormulas, subFormulaLeft);
-    var position2 = findFormula(masOfFormulas, subFormulaRight);
-    return mas[line][position1] | mas[line][position2];
-}
-
-function IMPLICATION(temp, position, masOfFormulas, line, mas) {
-    var subFormulaLeft = temp.substring(0, position);
-    var subFormulaRight = temp.substring(position + 1, temp.length);
-    var position1 = findFormula(masOfFormulas, subFormulaLeft);
-    var position2 = findFormula(masOfFormulas, subFormulaRight);
-    var tempValue1 = mas[line][position1];
-    var tempValue2 = mas[line][position2];
-    if (tempValue1 == 0 && tempValue2 == 0) {
-        return 1;
-    } else if (tempValue1 == 0 && tempValue2 == 1) {
-        return 1;
-    } else if (tempValue1 == 1 && tempValue2 == 0) {
-        return 0;
-    } else if (tempValue1 == 1 && tempValue2 == 1) {
-        return 1;
-    }
-    // return -1;
-}
-
-function EQUIVALENCE(temp, position, masOfFormulas, line, mas) {
-    var subFormulaLeft = temp.substring(0, position);
-    var subFormulaRight = temp.substring(position + 1, temp.length);
-    var position1 = findFormula(masOfFormulas, subFormulaLeft);
-    var position2 = findFormula(masOfFormulas, subFormulaRight);
-    var tempValue1 = mas[line][position1];
-    var tempValue2 = mas[line][position2];
-    if (tempValue1 == 0 && tempValue2 == 0) {
-        return 1;
-    } else if (tempValue1 == 0 && tempValue2 == 1) {
-        return 0;
-    } else if (tempValue1 == 1 && tempValue2 == 0) {
-        return 0;
-    } else if (tempValue1 == 1 && tempValue2 == 1) {
-        return 1;
-    }
-    // return -1;
-}
-
-function NOT(temp, position, masOfFormulas, line, mas) {
-    var subFormulaRight = temp.substring(position + 1, temp.length);
-    var position1 = findFormula(masOfFormulas, subFormulaRight);
-    return +!mas[line][position1];
-}
-
-function followCheck(firstMatrix, secondMatrix) {
-    var size = 0;
-    if (firstMatrix.length > secondMatrix.length) {
-        size = secondMatrix.length;
-    } else {
-        size = firstMatrix.length;
-    }
-    for (var i = 0; i < size; i++) {
-        if (firstMatrix[i][firstMatrix[i].length - 1] == 1 && secondMatrix[i][secondMatrix[i].length - 1] == 0) {
-            return false;
-        }
-    }
-    return true;
-}
