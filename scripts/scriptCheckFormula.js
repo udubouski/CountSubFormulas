@@ -1,3 +1,7 @@
+<!--
+	@author: Данный код был разработан студентом группы 521701 Дубовским В.В.
+-->
+
 var values=[];
 var set=[];
 
@@ -44,6 +48,20 @@ function createVariablesSet(str)
     }
 }
 
+function addInSet(el)
+{
+    var bool=true;
+    for(var i=0; i<set.length;i++)
+	{
+        if(set[i]==el) 
+		{
+            bool = false;
+            break;
+        }
+    }
+    if(bool) set.push(el);
+}
+
 function initVariablesInExpression(str)
 {
     var newStr=str.split("");
@@ -65,6 +83,45 @@ function isDelim(c)
 function isOperator(c) 
 {
     return c == '~' || c == '-' || c == '|' || c == '&' || c == '!';
+}
+
+function isLetter(s) 
+{
+    if (s == '1' || s == '0') return true;
+    else return false;
+}
+
+function isVariable(s) 
+{
+    if (s >= 'A' && s <= 'Z') return true;
+    else return false;
+}
+
+function replase_impl(str)
+{
+    var regexp = /->/g;
+    var ab = str.replace(regexp,"-");
+    if(ab!=null||ab!=undefined) return ab;
+    else return str;
+}
+
+function priority(op) 
+{
+    switch (op) 
+	{
+        case '~':
+            return 1;
+        case '-':
+            return 2;
+        case '|':
+            return 3;
+        case '&':
+            return 4;
+        case '!':
+            return 5;
+        default:
+            return -1;
+    }
 }
 
 function processOperator(st, op) 
@@ -94,59 +151,6 @@ function processOperator(st, op)
             else st.push('1');
             break;
     }
-}
-
-function addInSet(el)
-{
-    var bool=true;
-    for(var i=0; i<set.length;i++)
-	{
-        if(set[i]==el) 
-		{
-            bool = false;
-            break;
-        }
-    }
-    if(bool) set.push(el);
-}
-
-function isLetter(s) 
-{
-    if (s == '1' || s == '0') return true;
-    else return false;
-}
-
-function isVariable(s) 
-{
-    if (s >= 'A' && s <= 'Z') return true;
-    else return false;
-}
-
-function priority(op) 
-{
-    switch (op) 
-	{
-        case '~':
-            return 1;
-        case '-':
-            return 2;
-        case '|':
-            return 3;
-        case '&':
-            return 4;
-        case '!':
-            return 5;
-        default:
-            return -1;
-    }
-}
-
-function replase_impl(str)
-{
-    var regexp = /->/g;
-    var ab = str.replace(regexp,"-");
-    if(ab!=null||ab!=undefined) return ab;
-    else return str;
 }
 
 function calculate(s)
@@ -183,9 +187,3 @@ function calculate(s)
         processOperator(st, op.pop());
     return st[0];
 }
-
-
-
-
-
-
